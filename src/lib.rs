@@ -175,9 +175,10 @@ where
 /// # Errors
 ///
 /// Will return `Err` if it fails to write to the writer.
-pub fn generate<T>(inner_writer: T, urls: &[UrlEntry]) -> Result<T>
+pub fn generate<'g, T, I>(inner_writer: T, urls: I) -> Result<T>
 where
     T: std::io::Write,
+    I: IntoIterator<Item = &'g UrlEntry>,
 {
     let mut writer = Writer::new_with_indent(inner_writer, b' ', 4);
     writer.write_event(Event::Decl(BytesDecl::new("1.0", Some("UTF-8"), None)))?;
@@ -216,7 +217,10 @@ where
 
 /// Generates the sitemap.
 #[must_use]
-pub fn generate_bytes(urls: &[UrlEntry]) -> Vec<u8> {
+pub fn generate_bytes<'g, I>(urls: I) -> Vec<u8>
+where
+    I: IntoIterator<Item = &'g UrlEntry>,
+{
     let inner = Cursor::new(Vec::new());
     let result = generate(inner, urls).expect(
             "it should never error, please report this bug to https://github.com/edg-l/sitewriter/issues",
@@ -226,7 +230,10 @@ pub fn generate_bytes(urls: &[UrlEntry]) -> Vec<u8> {
 
 /// Generates the sitemap returning a string.
 #[must_use]
-pub fn generate_str(urls: &[UrlEntry]) -> String {
+pub fn generate_str<'g, I>(urls: I) -> String
+where
+    I: IntoIterator<Item = &'g UrlEntry>,
+{
     let bytes = generate_bytes(urls);
     let res = std::str::from_utf8(&bytes).expect("to be valid utf8");
     res.to_owned()
